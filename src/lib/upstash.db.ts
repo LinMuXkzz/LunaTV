@@ -553,14 +553,30 @@ export class UpstashRedisStorage implements IStorage {
       'UpstashRedisStorage.getAllOnlineUserStatus - 原始数据:',
       onlineUsers,
     );
+    console.log(
+      'UpstashRedisStorage.getAllOnlineUserStatus - 原始数据类型:',
+      typeof onlineUsers,
+    );
 
     const result: { [key: string]: any } = {};
     if (onlineUsers) {
-      for (const [userName, statusStr] of Object.entries(onlineUsers)) {
+      for (const [userName, status] of Object.entries(onlineUsers)) {
+        console.log(
+          'UpstashRedisStorage.getAllOnlineUserStatus - 处理用户:',
+          userName,
+          'status类型:',
+          typeof status,
+        );
         try {
-          result[userName] = JSON.parse(statusStr as string);
+          // Upstash Redis的hgetall可能已经自动解析了JSON，不需要再解析
+          if (typeof status === 'string') {
+            result[userName] = JSON.parse(status);
+          } else {
+            // 已经是对象，直接使用
+            result[userName] = status;
+          }
           console.log(
-            'UpstashRedisStorage.getAllOnlineUserStatus - 解析用户:',
+            'UpstashRedisStorage.getAllOnlineUserStatus - 成功解析用户:',
             userName,
           );
         } catch (e) {
