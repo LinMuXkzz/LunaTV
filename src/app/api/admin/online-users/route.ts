@@ -114,9 +114,9 @@ export async function GET(request: NextRequest) {
 
     if (storageType === 'localstorage') {
       // 从内存存储获取
-      for (const [key, value] of onlineUsersMemoryStore.entries()) {
+      onlineUsersMemoryStore.forEach((value, key) => {
         onlineUsers[key] = value;
-      }
+      });
     } else {
       // 从数据库存储获取
       console.log('GET - 开始从数据库获取在线用户状态');
