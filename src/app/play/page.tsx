@@ -1175,19 +1175,25 @@ function PlayPageClient() {
       console.log('updateOnlineStatus - authInfo:', authInfo);
 
       if (authInfo && authInfo.username) {
+        const requestData = {
+          videoTitle: videoTitleRef.current,
+          source: currentSourceRef.current,
+          id: currentIdRef.current,
+          episodeIndex: currentEpisodeIndexRef.current,
+          currentTime: Math.floor(currentTime),
+          duration: Math.floor(duration),
+        };
+        console.log(
+          'updateOnlineStatus - 发送的数据:',
+          JSON.stringify(requestData),
+        );
+
         const response = await fetch('/api/admin/online-users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            videoTitle: videoTitleRef.current,
-            source: currentSourceRef.current,
-            id: currentIdRef.current,
-            episodeIndex: currentEpisodeIndexRef.current,
-            currentTime: Math.floor(currentTime),
-            duration: Math.floor(duration),
-          }),
+          body: JSON.stringify(requestData),
         });
 
         console.log(
