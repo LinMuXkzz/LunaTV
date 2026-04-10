@@ -1278,10 +1278,17 @@ function PlayPageClient() {
         console.log('定时器 - 触发更新在线状态');
         console.log('定时器 - artPlayerRef.current:', !!artPlayerRef.current);
         if (artPlayerRef.current) {
-          console.log(
-            '定时器 - player.currentTime:',
-            artPlayerRef.current.currentTime,
-          );
+          const player = artPlayerRef.current;
+          console.log('定时器 - player.paused:', player.paused);
+          console.log('定时器 - player.currentTime:', player.currentTime);
+          console.log('定时器 - player.duration:', player.duration);
+          console.log('定时器 - player.video:', !!player.video);
+          if (player.video) {
+            console.log(
+              '定时器 - player.video.currentTime:',
+              player.video.currentTime,
+            );
+          }
         }
         updateOnlineStatus();
       }, 10000);
