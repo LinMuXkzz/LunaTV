@@ -1253,18 +1253,26 @@ function PlayPageClient() {
 
   // 播放器就绪后设置在线状态更新定时器
   useEffect(() => {
+    console.log('useEffect - 检查在线状态更新条件');
+    console.log('useEffect - artPlayerRef.current:', !!artPlayerRef.current);
+    console.log('useEffect - loading:', loading);
+
     if (artPlayerRef.current && !loading) {
       // 立即更新一次在线状态
+      console.log('useEffect - 触发立即更新在线状态');
       updateOnlineStatus();
 
       // 设置定时器，每30秒更新一次在线状态
+      console.log('useEffect - 设置在线状态更新定时器');
       onlineStatusIntervalRef.current = setInterval(() => {
+        console.log('定时器 - 触发更新在线状态');
         updateOnlineStatus();
       }, 30000);
     }
 
     return () => {
       if (onlineStatusIntervalRef.current) {
+        console.log('useEffect - 清理在线状态更新定时器');
         clearInterval(onlineStatusIntervalRef.current);
       }
     };
