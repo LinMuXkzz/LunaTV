@@ -1095,13 +1095,9 @@ function PlayPageClient() {
     }
 
     const player = artPlayerRef.current;
-    const currentTime = player.currentTime || 0;
-    const duration = player.duration || 0;
-
-    // 如果播放时间太短（少于5秒）或者视频时长无效，不保存
-    if (currentTime < 1 || !duration) {
-      return;
-    }
+    // 尝试多种方式获取currentTime
+    const currentTime = player.currentTime ?? player.video?.currentTime ?? 0;
+    const duration = player.duration ?? player.video?.duration ?? 0;
 
     try {
       await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
@@ -1164,8 +1160,9 @@ function PlayPageClient() {
     }
 
     const player = artPlayerRef.current;
-    const currentTime = player.currentTime || 0;
-    const duration = player.duration || 0;
+    // 尝试多种方式获取currentTime
+    const currentTime = player.currentTime ?? player.video?.currentTime ?? 0;
+    const duration = player.duration ?? player.video?.duration ?? 0;
 
     try {
       const authInfo = getAuthInfoFromBrowserCookie();
