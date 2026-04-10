@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       // 使用数据库存储
       console.log('POST - 开始保存到数据库, username:', username);
       console.log('POST - statusData:', JSON.stringify(statusData));
+      console.log('POST - currentTime in statusData:', statusData.currentTime);
       await db.setOnlineUserStatus(username, statusData);
       console.log('POST - 保存到数据库成功');
 
