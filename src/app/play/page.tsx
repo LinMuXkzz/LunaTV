@@ -1641,6 +1641,22 @@ function PlayPageClient() {
 
         // 播放器就绪后更新在线状态
         updateOnlineStatus();
+
+        // 播放器就绪后设置定时器，每10秒更新一次在线状态
+        console.log('ready事件 - 设置在线状态更新定时器');
+        if (onlineStatusIntervalRef.current) {
+          clearInterval(onlineStatusIntervalRef.current);
+        }
+        onlineStatusIntervalRef.current = setInterval(() => {
+          console.log('定时器 - 触发更新在线状态');
+          const player = artPlayerRef.current;
+          if (player) {
+            console.log('定时器 - player.paused:', player.paused);
+            console.log('定时器 - player.currentTime:', player.currentTime);
+            console.log('定时器 - player.duration:', player.duration);
+          }
+          updateOnlineStatus();
+        }, 10000);
       });
 
       // 监听播放状态变化，控制 Wake Lock
