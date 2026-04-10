@@ -1264,6 +1264,13 @@ function PlayPageClient() {
       console.log('useEffect - 设置在线状态更新定时器');
       onlineStatusIntervalRef.current = setInterval(() => {
         console.log('定时器 - 触发更新在线状态');
+        console.log('定时器 - artPlayerRef.current:', !!artPlayerRef.current);
+        if (artPlayerRef.current) {
+          console.log(
+            '定时器 - player.currentTime:',
+            artPlayerRef.current.currentTime,
+          );
+        }
         updateOnlineStatus();
       }, 10000);
     }
@@ -1638,8 +1645,15 @@ function PlayPageClient() {
         // 每10秒更新一次在线状态（避免过于频繁的请求）
         const currentTime = artPlayerRef.current?.currentTime || 0;
         const seconds = Math.floor(currentTime);
+        console.log(
+          'timeupdate事件 - currentTime:',
+          currentTime,
+          'seconds:',
+          seconds,
+        );
         // 只有当播放时间超过10秒并且是10的倍数时才更新
         if (seconds >= 10 && seconds % 10 === 0) {
+          console.log('timeupdate事件 - 触发更新在线状态');
           updateOnlineStatus();
         }
       });
