@@ -261,6 +261,26 @@ export class DbManager {
     return {};
   }
 
+  // ---------- 在线用户状态相关 ----------
+  async setOnlineUserStatus(userName: string, status: any): Promise<void> {
+    if (typeof (this.storage as any).setOnlineUserStatus === 'function') {
+      await (this.storage as any).setOnlineUserStatus(userName, status);
+    }
+  }
+
+  async removeOnlineUserStatus(userName: string): Promise<void> {
+    if (typeof (this.storage as any).removeOnlineUserStatus === 'function') {
+      await (this.storage as any).removeOnlineUserStatus(userName);
+    }
+  }
+
+  async getAllOnlineUserStatus(): Promise<{ [key: string]: any }> {
+    if (typeof (this.storage as any).getAllOnlineUserStatus === 'function') {
+      return (this.storage as any).getAllOnlineUserStatus();
+    }
+    return {};
+  }
+
   // ---------- 数据清理 ----------
   async clearAllData(): Promise<void> {
     if (typeof (this.storage as any).clearAllData === 'function') {
