@@ -58,9 +58,12 @@ export async function POST(request: NextRequest) {
     if (storageType === 'localstorage') {
       // 使用内存存储
       onlineUsersMemoryStore.set(username, statusData);
+      console.log('POST - 保存到内存存储:', username, statusData);
     } else {
       // 使用数据库存储
+      console.log('POST - 开始保存到数据库:', username, statusData);
       await db.setOnlineUserStatus(username, statusData);
+      console.log('POST - 保存到数据库成功');
     }
 
     return NextResponse.json({ ok: true });
@@ -116,7 +119,9 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // 从数据库存储获取
+      console.log('GET - 开始从数据库获取在线用户状态');
       onlineUsers = await db.getAllOnlineUserStatus();
+      console.log('GET - 从数据库获取到的在线用户状态:', onlineUsers);
     }
 
     // 过滤掉过期的状态（超过30分钟）
