@@ -1256,8 +1256,9 @@ function PlayPageClient() {
     console.log('useEffect - 检查在线状态更新条件');
     console.log('useEffect - artPlayerRef.current:', !!artPlayerRef.current);
     console.log('useEffect - loading:', loading);
+    console.log('useEffect - videoUrl:', !!videoUrl);
 
-    if (artPlayerRef.current && !loading) {
+    if (artPlayerRef.current && !loading && videoUrl) {
       // 立即更新一次在线状态
       console.log('useEffect - 触发立即更新在线状态');
       updateOnlineStatus();
@@ -1276,7 +1277,7 @@ function PlayPageClient() {
         clearInterval(onlineStatusIntervalRef.current);
       }
     };
-  }, [loading]);
+  }, [loading, videoUrl]);
 
   // ---------------------------------------------------------------------------
   // 收藏相关
