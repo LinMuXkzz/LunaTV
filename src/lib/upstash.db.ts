@@ -543,11 +543,13 @@ export class UpstashRedisStorage implements IStorage {
       this.client.hgetall(this.onlineUsersKey()),
     );
     const result: { [key: string]: any } = {};
-    for (const [userName, statusStr] of Object.entries(onlineUsers)) {
-      try {
-        result[userName] = JSON.parse(statusStr as string);
-      } catch (e) {
-        console.error('解析在线用户状态失败:', e);
+    if (onlineUsers) {
+      for (const [userName, statusStr] of Object.entries(onlineUsers)) {
+        try {
+          result[userName] = JSON.parse(statusStr as string);
+        } catch (e) {
+          console.error('解析在线用户状态失败:', e);
+        }
       }
     }
     return result;
