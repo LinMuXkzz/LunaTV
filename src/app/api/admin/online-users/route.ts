@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       isOwner = username === process.env.USERNAME;
       isAdmin = adminConfig?.UserConfig.Users.some(
         (u) => u.username === username && u.role === 'admin',
-      );
+      ) || false;
     } else {
       // 对于localstorage模式，简化权限检查，只要是登录用户就可以查看（仅用于测试）
       isOwner = true;
