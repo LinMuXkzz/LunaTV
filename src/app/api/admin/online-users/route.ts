@@ -61,9 +61,14 @@ export async function POST(request: NextRequest) {
       console.log('POST - 保存到内存存储:', username, statusData);
     } else {
       // 使用数据库存储
-      console.log('POST - 开始保存到数据库:', username, statusData);
+      console.log('POST - 开始保存到数据库, username:', username);
+      console.log('POST - statusData:', JSON.stringify(statusData));
       await db.setOnlineUserStatus(username, statusData);
       console.log('POST - 保存到数据库成功');
+
+      // 验证保存是否成功
+      const savedData = await db.getAllOnlineUserStatus();
+      console.log('POST - 验证保存后的数据:', JSON.stringify(savedData));
     }
 
     return NextResponse.json({ ok: true });
