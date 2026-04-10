@@ -83,7 +83,11 @@ export async function GET(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 
   try {
+    console.log('GET - 开始获取在线用户状态');
+    console.log('GET - storageType:', storageType);
+
     const authInfo = getAuthInfoFromCookie(request);
+    console.log('GET - authInfo:', authInfo);
 
     if (!authInfo || !authInfo.username) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -97,9 +101,12 @@ export async function GET(request: NextRequest) {
       const adminConfig = await db.getAdminConfig();
       const username = authInfo.username;
       isOwner = username === process.env.USERNAME;
-      isAdmin = adminConfig?.UserConfig.Users.some(
-        (u) => u.username === username && u.role === 'admin',
-      ) || false;
+      isAdmin =
+        adminConfig?.UserConfig.Users.some(
+          (u) => u.username === username && u.role === 'admin',
+        ) || false;
+      console.log('GET - adminConfig:', adminConfig);
+      console.log('GET - isOwner:', isOwner, 'isAdmin:', isAdmin);
     } else {
       // 对于localstorage模式，简化权限检查，只要是登录用户就可以查看（仅用于测试）
       isOwner = true;
@@ -114,6 +121,10 @@ export async function GET(request: NextRequest) {
 
     if (storageType === 'localstorage') {
       // 从内存存储获取
+      console.log(
+        'GET - 使用内存存储，当前数据条数:',
+        onlineUsersMemoryStore.size,
+      );
       onlineUsersMemoryStore.forEach((value, key) => {
         onlineUsers[key] = value;
       });
@@ -124,10 +135,21 @@ export async function GET(request: NextRequest) {
       console.log('GET - 从数据库获取到的在线用户状态:', onlineUsers);
     }
 
+    console.log('GET - 原始在线用户数据:', JSON.stringify(onlineUsers));
+
     // 过滤掉过期的状态（超过30分钟）
     const now = Date.now();
+    console.log('GET - 当前时间:', now);
     const validOnlineUsers = Object.entries(onlineUsers).reduce(
       (acc, [key, status]) => {
+        console.log(
+          'GET - 检查用户:',
+          key,
+          'lastUpdate:',
+          status.lastUpdate,
+          '差距:',
+          now - status.lastUpdate,
+        );
         if (status.lastUpdate && now - status.lastUpdate < 30 * 60 * 1000) {
           acc[key] = status;
         }
@@ -136,6 +158,7 @@ export async function GET(request: NextRequest) {
       {} as { [key: string]: any },
     );
 
+    console.log('GET - 有效在线用户数据:', JSON.stringify(validOnlineUsers));
     return NextResponse.json(validOnlineUsers);
   } catch (error) {
     console.error('获取在线用户状态失败:', error);
