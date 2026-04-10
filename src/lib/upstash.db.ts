@@ -539,19 +539,40 @@ export class UpstashRedisStorage implements IStorage {
   }
 
   async getAllOnlineUserStatus(): Promise<{ [key: string]: any }> {
+    console.log('UpstashRedisStorage.getAllOnlineUserStatus - 开始获取');
+    console.log(
+      'UpstashRedisStorage.getAllOnlineUserStatus - key:',
+      this.onlineUsersKey(),
+    );
+
     const onlineUsers = await withRetry(() =>
       this.client.hgetall(this.onlineUsersKey()),
     );
+
+    console.log(
+      'UpstashRedisStorage.getAllOnlineUserStatus - 原始数据:',
+      onlineUsers,
+    );
+
     const result: { [key: string]: any } = {};
     if (onlineUsers) {
       for (const [userName, statusStr] of Object.entries(onlineUsers)) {
         try {
           result[userName] = JSON.parse(statusStr as string);
+          console.log(
+            'UpstashRedisStorage.getAllOnlineUserStatus - 解析用户:',
+            userName,
+          );
         } catch (e) {
           console.error('解析在线用户状态失败:', e);
         }
       }
     }
+
+    console.log(
+      'UpstashRedisStorage.getAllOnlineUserStatus - 返回结果:',
+      JSON.stringify(result),
+    );
     return result;
   }
 }
