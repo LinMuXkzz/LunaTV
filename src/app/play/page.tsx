@@ -1099,6 +1099,12 @@ function PlayPageClient() {
     const currentTime = player.currentTime ?? player.video?.currentTime ?? 0;
     const duration = player.duration ?? player.video?.duration ?? 0;
 
+    console.log('updateOnlineStatus - 准备发送数据:');
+    console.log('  player.currentTime:', player.currentTime);
+    console.log('  player.video?.currentTime:', player.video?.currentTime);
+    console.log('  currentTime:', currentTime);
+    console.log('  duration:', duration);
+
     try {
       await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
         title: videoTitleRef.current,
@@ -1628,6 +1634,12 @@ function PlayPageClient() {
       artPlayerRef.current.on('play', () => {
         requestWakeLock();
         // 视频开始播放时更新在线状态
+        console.log('play事件 - 视频开始播放');
+        console.log(
+          'play事件 - currentTime:',
+          artPlayerRef.current?.currentTime,
+        );
+        console.log('play事件 - duration:', artPlayerRef.current?.duration);
         updateOnlineStatus();
       });
 
