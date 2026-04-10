@@ -500,6 +500,42 @@ export class UpstashRedisStorage implements IStorage {
       throw new Error('清空数据失败');
     }
   }
+
+  // ---------- 在线用户状态 ----------
+  private onlineUsersKey() {
+    return 'sys:online_users';
+  }
+
+  async setOnlineUserStatus(userName: string, status: any): Promise<void> {
+    await withRetry(() =>
+      this.client.hSet(this.onlineUsersKey(), userName, JSON.stringify(status))
+    );
+    // 设置过期时间为30分钟，自动清理不活跃用户
+    await withRetry(() =>
+      this.client.expire(this.onlineUsersKey(), 30 * 60)
+    );
+  }
+
+  async removeOnlineUserStatus(userName: string): Promise<void> {
+    await withRetry(() =>
+      this.client.hDel(this.onlineUsersKey(), userName)
+    );
+  }
+
+  async getAllOnlineUserStatus(): Promise<{ [key: string]: any }> {
+    const onlineUsers = await withRetry(() =>
+      this.client.hGetAll(this.onlineUsersKey())
+    );
+    const result: { [key: string]: any } = {};
+    for (const [userName, statusStr] of Object.entries(onlineUsers)) {
+      try {
+        result[userName] = JSON.parse(statusStr as string);
+      } catch (e) {
+        console.error('解析在线用户状态失败:', e);
+      }
+    }
+    return result;
+  }
 }
 
 // 单例 Upstash Redis 客户端
