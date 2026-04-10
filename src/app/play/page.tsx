@@ -1131,12 +1131,35 @@ function PlayPageClient() {
 
   // 更新在线用户状态
   const updateOnlineStatus = async () => {
+    console.log('updateOnlineStatus - 开始执行');
+    console.log(
+      'updateOnlineStatus - artPlayerRef.current:',
+      !!artPlayerRef.current,
+    );
+    console.log(
+      'updateOnlineStatus - currentSourceRef.current:',
+      currentSourceRef.current,
+    );
+    console.log(
+      'updateOnlineStatus - currentIdRef.current:',
+      currentIdRef.current,
+    );
+    console.log(
+      'updateOnlineStatus - videoTitleRef.current:',
+      videoTitleRef.current,
+    );
+    console.log(
+      'updateOnlineStatus - currentEpisodeIndexRef.current:',
+      currentEpisodeIndexRef.current,
+    );
+
     if (
       !artPlayerRef.current ||
       !currentSourceRef.current ||
       !currentIdRef.current ||
       !videoTitleRef.current
     ) {
+      console.log('updateOnlineStatus - 缺少必要参数，返回');
       return;
     }
 
@@ -1173,6 +1196,8 @@ function PlayPageClient() {
         if (!response.ok) {
           const errorData = await response.json();
           console.error('更新在线状态失败 - 服务器错误:', errorData);
+        } else {
+          console.log('更新在线状态成功');
         }
       } else {
         console.log('updateOnlineStatus - 用户未登录，不更新在线状态');
@@ -1243,7 +1268,7 @@ function PlayPageClient() {
         clearInterval(onlineStatusIntervalRef.current);
       }
     };
-  }, [loading, artPlayerRef.current]);
+  }, [loading]);
 
   // ---------------------------------------------------------------------------
   // 收藏相关
@@ -1581,6 +1606,9 @@ function PlayPageClient() {
         if (artPlayerRef.current && !artPlayerRef.current.paused) {
           requestWakeLock();
         }
+
+        // 播放器就绪后更新在线状态
+        updateOnlineStatus();
       });
 
       // 监听播放状态变化，控制 Wake Lock
