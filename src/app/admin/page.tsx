@@ -5177,13 +5177,20 @@ function AdminPageClient() {
   const refreshOnlineUsers = async () => {
     setIsLoadingOnlineUsers(true);
     try {
+      console.log('refreshOnlineUsers - 开始获取在线用户状态');
       const res = await fetch('/api/admin/online-users');
+      console.log('refreshOnlineUsers - 响应状态:', res.status, res.statusText);
+      
       if (res.ok) {
         const data = await res.json();
+        console.log('refreshOnlineUsers - 获取到的数据:', data);
         setOnlineUsers(data);
+      } else {
+        const errorData = await res.json();
+        console.error('refreshOnlineUsers - 服务器错误:', errorData);
       }
     } catch (error) {
-      console.error('获取在线用户状态失败:', error);
+      console.error('refreshOnlineUsers - 获取在线用户状态失败:', error);
     } finally {
       setIsLoadingOnlineUsers(false);
     }
