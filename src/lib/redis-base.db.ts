@@ -575,6 +575,40 @@ export abstract class BaseRedisStorage implements IStorage {
     }
   }
 
+  // ---------- 在线用户状态相关 ----------
+  private onlineUsersKey() {
+    return 'sys:online_users'; // 所有在线用户状态存在一个 Hash 中
+  }
+
+  async setOnlineUserStatus(userName: string, status: any): Promise<void> {
+    await this.withRetry(() =>
+      this.client.hSet(this.onlineUsersKey(), userName, JSON.stringify(status))
+    );
+    // 设置过期时间为30分钟，自动清理不活跃用户
+    await this.withRetry(() =>
+      this.client.expire(this.onlineUsersKey(), 30 * 60)
+    );
+  }
+
+  async removeOnlineUserStatus(userName: string): Promise<void> {
+    await this.withRetry(() =>
+      this.client.hDel(this.onlineUsersKey(), userName)
+    );
+  }
+
+  async getAllOnlineUserStatus(): Promise<{ [key: string]: any }> {
+    const all = await this.withRetry(() =>
+      this.client.hGetAll(this.onlineUsersKey())
+    );
+    const result: { [key: string]: any } = {};
+    for (const [field, raw] of Object.entries(all)) {
+      if (raw) {
+        result[field] = JSON.parse(raw);
+      }
+    }
+    return result;
+  }
+
   // 清空所有数据
   async clearAllData(): Promise<void> {
     try {
@@ -588,6 +622,9 @@ export abstract class BaseRedisStorage implements IStorage {
 
       // 删除管理员配置
       await this.withRetry(() => this.client.del(this.adminConfigKey()));
+
+      // 删除在线用户状态
+      await this.withRetry(() => this.client.del(this.onlineUsersKey()));
 
       console.log('所有数据已清空');
     } catch (error) {

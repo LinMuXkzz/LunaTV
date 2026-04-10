@@ -130,3 +130,89 @@ export interface SkipConfig {
   intro_time: number; // 片头时间（秒）
   outro_time: number; // 片尾时间（秒）
 }
+
+// 在线用户观看状态数据结构
+export interface OnlineUserStatus {
+  username: string; // 用户名
+  videoTitle: string; // 视频标题
+  source: string; // 视频源
+  id: string; // 视频ID
+  episodeIndex: number; // 当前集数索引
+  currentTime: number; // 当前播放进度（秒）
+  duration: number; // 视频总时长（秒）
+  lastUpdate: number; // 最后更新时间戳
+  ip?: string; // 用户IP地址（可选）
+  userAgent?: string; // 用户代理（可选）
+}
+
+// 存储接口扩展
+export interface IStorage {
+  // 播放记录相关
+  getPlayRecord(userName: string, key: string): Promise<PlayRecord | null>;
+  setPlayRecord(
+    userName: string,
+    key: string,
+    record: PlayRecord
+  ): Promise<void>;
+  getAllPlayRecords(userName: string): Promise<{ [key: string]: PlayRecord }>;
+  deletePlayRecord(userName: string, key: string): Promise<void>;
+  deleteAllPlayRecords(userName: string): Promise<void>;
+
+  // 收藏相关
+  getFavorite(userName: string, key: string): Promise<Favorite | null>;
+  setFavorite(userName: string, key: string, favorite: Favorite): Promise<void>;
+  getAllFavorites(userName: string): Promise<{ [key: string]: Favorite }>;
+  deleteFavorite(userName: string, key: string): Promise<void>;
+  deleteAllFavorites(userName: string): Promise<void>;
+
+  // 用户相关
+  registerUser(userName: string, password: string): Promise<void>;
+  verifyUser(userName: string, password: string): Promise<boolean>;
+  // 检查用户是否存在（无需密码）
+  checkUserExist(userName: string): Promise<boolean>;
+  // 修改用户密码
+  changePassword(userName: string, newPassword: string): Promise<void>;
+  // 删除用户（包括密码、搜索历史、播放记录、收藏夹）
+  deleteUser(userName: string): Promise<void>;
+
+  // 搜索历史相关
+  getSearchHistory(userName: string): Promise<string[]>;
+  addSearchHistory(userName: string, keyword: string): Promise<void>;
+  deleteSearchHistory(userName: string, keyword?: string): Promise<void>;
+
+  // 用户列表
+  getAllUsers(): Promise<string[]>;
+
+  // 管理员配置相关
+  getAdminConfig(): Promise<AdminConfig | null>;
+  setAdminConfig(config: AdminConfig): Promise<void>;
+
+  // 跳过片头片尾配置相关
+  getSkipConfig(
+    userName: string,
+    source: string,
+    id: string
+  ): Promise<SkipConfig | null>;
+  setSkipConfig(
+    userName: string,
+    source: string,
+    id: string,
+    config: SkipConfig
+  ): Promise<void>;
+  deleteSkipConfig(userName: string, source: string, id: string): Promise<void>;
+  getAllSkipConfigs(userName: string): Promise<{ [key: string]: SkipConfig }>;
+
+  // 在线用户状态相关
+  setOnlineUserStatus(userName: string, status: OnlineUserStatus): Promise<void>;
+  removeOnlineUserStatus(userName: string): Promise<void>;
+  getAllOnlineUserStatus(): Promise<{ [key: string]: OnlineUserStatus }>;
+
+  // 数据迁移（旧扁平 key → Hash 结构）
+  migrateData?(): Promise<void>;
+
+  // 密码迁移（明文 → 加盐哈希）
+  migratePasswords?(): Promise<void>;
+
+  // 数据清理相关
+  clearAllData(): Promise<void>;
+}
