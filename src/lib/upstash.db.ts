@@ -526,7 +526,9 @@ export class UpstashRedisStorage implements IStorage {
 
   async setOnlineUserStatus(userName: string, status: any): Promise<void> {
     await withRetry(() =>
-      this.client.hset(this.onlineUsersKey(), userName, JSON.stringify(status)),
+      this.client.hset(this.onlineUsersKey(), {
+        [userName]: JSON.stringify(status),
+      }),
     );
     // 设置过期时间为30分钟，自动清理不活跃用户
     await withRetry(() => this.client.expire(this.onlineUsersKey(), 30 * 60));
