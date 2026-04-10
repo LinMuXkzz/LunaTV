@@ -105,12 +105,15 @@ export async function GET(request: NextRequest) {
     if (storageType !== 'localstorage') {
       const adminConfig = await db.getAdminConfig();
       const username = authInfo.username;
-      isOwner = username === process.env.USERNAME;
+      const envUsername = process.env.USERNAME;
+      isOwner = username === envUsername;
       isAdmin =
         adminConfig?.UserConfig.Users.some(
           (u) => u.username === username && u.role === 'admin',
         ) || false;
-      console.log('GET - adminConfig:', adminConfig);
+      console.log('GET - adminConfig:', JSON.stringify(adminConfig));
+      console.log('GET - username:', username);
+      console.log('GET - envUsername:', envUsername);
       console.log('GET - isOwner:', isOwner, 'isAdmin:', isAdmin);
     } else {
       // 对于localstorage模式，简化权限检查，只要是登录用户就可以查看（仅用于测试）
