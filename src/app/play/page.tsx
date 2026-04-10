@@ -1146,8 +1146,10 @@ function PlayPageClient() {
 
     try {
       const authInfo = getAuthInfoFromBrowserCookie();
+      console.log('updateOnlineStatus - authInfo:', authInfo);
+
       if (authInfo && authInfo.username) {
-        await fetch('/api/admin/online-users', {
+        const response = await fetch('/api/admin/online-users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1161,6 +1163,19 @@ function PlayPageClient() {
             duration: Math.floor(duration),
           }),
         });
+
+        console.log(
+          'updateOnlineStatus - response:',
+          response.status,
+          response.statusText,
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('更新在线状态失败 - 服务器错误:', errorData);
+        }
+      } else {
+        console.log('updateOnlineStatus - 用户未登录，不更新在线状态');
       }
     } catch (err) {
       console.error('更新在线状态失败:', err);
