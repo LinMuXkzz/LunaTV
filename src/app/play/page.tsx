@@ -1263,12 +1263,12 @@ function PlayPageClient() {
       console.log('useEffect - 触发立即更新在线状态');
       updateOnlineStatus();
 
-      // 设置定时器，每30秒更新一次在线状态
+      // 设置定时器，每10秒更新一次在线状态
       console.log('useEffect - 设置在线状态更新定时器');
       onlineStatusIntervalRef.current = setInterval(() => {
         console.log('定时器 - 触发更新在线状态');
         updateOnlineStatus();
-      }, 30000);
+      }, 10000);
     }
 
     return () => {
@@ -1623,6 +1623,8 @@ function PlayPageClient() {
       // 监听播放状态变化，控制 Wake Lock
       artPlayerRef.current.on('play', () => {
         requestWakeLock();
+        // 视频开始播放时更新在线状态
+        updateOnlineStatus();
       });
 
       artPlayerRef.current.on('pause', () => {
@@ -1632,6 +1634,17 @@ function PlayPageClient() {
 
       artPlayerRef.current.on('video:ended', () => {
         releaseWakeLock();
+      });
+
+      // 监听播放时间变化，定期更新在线状态
+      artPlayerRef.current.on('timeupdate', () => {
+        // 每10秒更新一次在线状态（避免过于频繁的请求）
+        const currentTime = artPlayerRef.current?.currentTime || 0;
+        const seconds = Math.floor(currentTime);
+        // 只有当播放时间超过10秒并且是10的倍数时才更新
+        if (seconds >= 10 && seconds % 10 === 0) {
+          updateOnlineStatus();
+        }
       });
 
       // 如果播放器初始化时已经在播放状态，则请求 Wake Lock
