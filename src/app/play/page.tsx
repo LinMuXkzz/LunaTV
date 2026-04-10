@@ -23,6 +23,7 @@ import {
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
+import WatchingTracker from '@/lib/watchingTracker';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
@@ -205,6 +206,9 @@ function PlayPageClient() {
 
   // Wake Lock 相关
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  // 观看追踪器
+  const watchingTrackerRef = useRef<WatchingTracker | null>(null);
 
   // -----------------------------------------------------------------------------
   // 工具函数（Utils）
@@ -1121,18 +1125,65 @@ function PlayPageClient() {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // 观看追踪相关
+  // ---------------------------------------------------------------------------
+  // 初始化观看追踪器
+  const initWatchingTracker = () => {
+    if (!artPlayerRef.current || !currentSourceRef.current || !currentIdRef.current) {
+      return;
+    }
+
+    // 销毁旧的追踪器
+    if (watchingTrackerRef.current) {
+      watchingTrackerRef.current.destroy();
+      watchingTrackerRef.current = null;
+    }
+
+    // 创建新的追踪器
+    const tracker = new WatchingTracker();
+    watchingTrackerRef.current = tracker;
+
+    // 开始追踪
+    tracker.startTracking(artPlayerRef.current, {
+      videoId: `${currentSourceRef.current}-${currentIdRef.current}`,
+      videoTitle: videoTitleRef.current,
+      episodeId: String(currentEpisodeIndexRef.current + 1),
+      episodeTitle: detailRef.current?.episodes_titles?.[currentEpisodeIndexRef.current] || `第 ${currentEpisodeIndexRef.current + 1} 集`,
+      progress: artPlayerRef.current.currentTime || 0,
+      duration: artPlayerRef.current.duration || 0,
+      source: currentSourceRef.current,
+    });
+  };
+
+  // 停止观看追踪
+  const stopWatchingTracker = () => {
+    if (watchingTrackerRef.current) {
+      watchingTrackerRef.current.stopTracking();
+    }
+  };
+
+  // 上报观看数据（页面卸载时）
+  const reportWatchingData = () => {
+    if (watchingTrackerRef.current) {
+      watchingTrackerRef.current.reportOffline();
+    }
+  };
+
   useEffect(() => {
-    // 页面即将卸载时保存播放进度和清理资源
+    // 页面即将卸载时保存播放进度、上报观看数据、清理资源
     const handleBeforeUnload = () => {
       saveCurrentPlayProgress();
+      reportWatchingData();
       releaseWakeLock();
       cleanupPlayer();
     };
 
-    // 页面可见性变化时保存播放进度和释放 Wake Lock
+    // 页面可见性变化时保存播放进度、上报观看数据和释放 Wake Lock
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         saveCurrentPlayProgress();
+        reportWatchingData();
         releaseWakeLock();
       } else if (document.visibilityState === 'visible') {
         // 页面重新可见时，如果正在播放则重新请求 Wake Lock
@@ -1161,6 +1212,16 @@ function PlayPageClient() {
       }
     };
   }, []);
+
+  // 监听集数变化，重新初始化追踪器
+  useEffect(() => {
+    if (!artPlayerRef.current) return;
+    // 延迟一点等待播放器更新
+    const timer = setTimeout(() => {
+      initWatchingTracker();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentEpisodeIndex, currentSource, currentId]);
 
   // ---------------------------------------------------------------------------
   // 收藏相关
@@ -1273,6 +1334,8 @@ function PlayPageClient() {
           videoUrl
         );
       }
+      // 视频切换后重新初始化追踪器
+      setTimeout(() => initWatchingTracker(), 500);
       return;
     }
 
@@ -1497,20 +1560,35 @@ function PlayPageClient() {
         if (artPlayerRef.current && !artPlayerRef.current.paused) {
           requestWakeLock();
         }
+
+        // 初始化观看追踪器
+        initWatchingTracker();
       });
 
       // 监听播放状态变化，控制 Wake Lock
       artPlayerRef.current.on('play', () => {
         requestWakeLock();
+        // 恢复追踪
+        if (watchingTrackerRef.current) {
+          watchingTrackerRef.current.resumeTracking();
+        }
       });
 
       artPlayerRef.current.on('pause', () => {
         releaseWakeLock();
         saveCurrentPlayProgress();
+        // 暂停追踪（但不停止，只是不累加时间）
+        if (watchingTrackerRef.current) {
+          watchingTrackerRef.current.pauseTracking();
+        }
       });
 
       artPlayerRef.current.on('video:ended', () => {
         releaseWakeLock();
+        // 视频结束，上报观看数据
+        if (watchingTrackerRef.current) {
+          watchingTrackerRef.current.reportOffline();
+        }
       });
 
       // 如果播放器初始化时已经在播放状态，则请求 Wake Lock
@@ -1654,7 +1732,7 @@ function PlayPageClient() {
     }
   }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled]);
 
-  // 当组件卸载时清理定时器、Wake Lock 和播放器资源
+  // 当组件卸载时清理定时器、Wake Lock、追踪器和播放器资源
   useEffect(() => {
     return () => {
       // 清理定时器
@@ -1664,6 +1742,15 @@ function PlayPageClient() {
 
       // 释放 Wake Lock
       releaseWakeLock();
+
+      // 上报观看数据
+      reportWatchingData();
+
+      // 销毁追踪器
+      if (watchingTrackerRef.current) {
+        watchingTrackerRef.current.destroy();
+        watchingTrackerRef.current = null;
+      }
 
       // 销毁播放器实例
       cleanupPlayer();
